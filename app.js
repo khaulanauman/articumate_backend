@@ -1,3 +1,4 @@
+// app.js
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -30,8 +31,18 @@ app.use(cors(corsOptions));
 // Parse JSON bodies
 app.use(express.json());
 
+// --- ROUTES ---
+// Unified authentication routes (Signup + Login)
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes); 
+// Example endpoints:
+// POST http://localhost:8080/api/auth/signup
+// POST http://localhost:8080/api/auth/login
+
 // --- DATABASE CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/articumate";
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  "mongodb+srv://khaulanauman_db_user:zi0Ta98LQhRmI5kd@articumatedb.e7ezvcg.mongodb.net/articumateDB?retryWrites=true&w=majority";
 
 mongoose
   .connect(MONGO_URI)
