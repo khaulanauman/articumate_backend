@@ -4,9 +4,11 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const loginRoutes = require("./routes/loginRoutes");
 const guardianFeedRoutes = require("./routes/community/guardianFeedRoutes");
 const guardianGroupsRoutes = require("./routes/community/guardianGroupsRoutes");
-const loginRoutes = require("./routes/loginRoutes");
+const guardianAccessRoutes = require("./routes/guardianAccessRoutes");
+
 
 // Load environment variables from .env
 dotenv.config();
@@ -18,7 +20,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, Postman)
     if (!origin) return callback(null, true);
-
+    
     // Allow all localhost and 127.0.0.1 ports during development
     if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
       return callback(null, true);
@@ -40,6 +42,7 @@ app.use("/api/auth", loginRoutes);
 app.use("/api/auth", authRoutes); 
 app.use("/api/guardian", guardianFeedRoutes);
 app.use("/api/guardian", guardianGroupsRoutes);
+app.use("/api/guardian/access", guardianAccessRoutes);
 
 // --- DATABASE CONNECTION ---
 const MONGO_URI =
