@@ -1,14 +1,20 @@
-// Copyright 2025 hp
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//     https://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+const router = require("express").Router();
+const requireAuth = require("../middleware/requireAuth");
+const requireRole = require("../middleware/requireRole");
+const c = require("../controllers/community/guardianFeedController");
 
+router.use(requireAuth, requireRole("guardian"));
+
+router.post("/feed", c.createPost);
+router.get("/feed", c.listPosts);
+
+router.post("/feed/:id/like", c.likePost);
+router.delete("/feed/:id/like", c.unlikePost);
+
+router.post("/feed/:id/save", c.savePost);
+router.delete("/feed/:id/save", c.unsavePost);
+
+router.post("/feed/:id/flag", c.flagPost);
+router.delete("/feed/:id", c.deletePost);
+
+module.exports = router;
