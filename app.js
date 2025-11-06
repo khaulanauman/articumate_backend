@@ -20,7 +20,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.warn(`❌ CORS blocked request from: ${origin}`);
+    console.warn(`CORS blocked request from: ${origin}`);
     return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -41,25 +41,24 @@ app.use("/api/auth", authRoutes);
 
 // --- DATABASE CONNECTION ---
 const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://khaulanauman_db_user:zi0Ta98LQhRmI5kd@articumatedb.e7ezvcg.mongodb.net/articumateDB?retryWrites=true&w=majority";
+  process.env.MONGO_URI
 
 mongoose
   .connect(MONGO_URI)
   .then(() => {
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB!!");
 
     const PORT = process.env.PORT || 8080;
     app.listen(PORT, () =>
-      console.log(`🚀 Server running on http://localhost:${PORT}`)
+      console.log(`Server running on http://localhost:${PORT}`)
     );
   })
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("MongoDB connection error :( :", err.message);
     process.exit(1);
   });
 
 // --- TEST ROUTE ---
 app.get("/", (req, res) => {
-  res.send("ArticuMate backend connected to MongoDB ✅");
+  res.send("ArticuMate backend connected to MongoDB!!");
 });
