@@ -1,4 +1,4 @@
-const GuardianGroup = require("../models/community/guardianGroup");
+const GuardianGroup = require("../../models/community/guradianGroup");
 
 // POST /api/guardian/groups
 exports.createGroup = async (req, res, next) => {

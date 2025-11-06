@@ -1,5 +1,5 @@
-const GuardianMessage = require("../models/GuardianMessage");
-const GuardianGroup = require("../models/GuardianGroup");
+const GuardianMessage = require("../../models/community/guardianMessage");
+const GuardianGroup = require("../../models/community/guradianGroup");
 
 // GET /api/guardian/groups/:id/messages?limit=50&before=ISO
 exports.getMessages = async (req, res, next) => {

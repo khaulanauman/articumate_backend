@@ -3,6 +3,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const authRoutes = require("./routes/authRoutes");
+const guardianFeedRoutes = require("./routes/community/guardianFeedRoutes");
+const guardianGroupsRoutes = require("./routes/community/guardianGroupsRoutes");
+const loginRoutes = require("./routes/loginRoutes");
 
 // Load environment variables from .env
 dotenv.config();
@@ -19,7 +23,7 @@ const corsOptions = {
     if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
       return callback(null, true);
     }
-
+    
     console.warn(`CORS blocked request from: ${origin}`);
     return callback(new Error("Not allowed by CORS"));
   },
@@ -32,12 +36,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // --- ROUTES ---
-// Unified authentication routes (Signup + Login)
-const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", loginRoutes);
 app.use("/api/auth", authRoutes); 
-// Example endpoints:
-// POST http://localhost:8080/api/auth/signup
-// POST http://localhost:8080/api/auth/login
+app.use("/api/guardian", guardianFeedRoutes);
+app.use("/api/guardian", guardianGroupsRoutes);
 
 // --- DATABASE CONNECTION ---
 const MONGO_URI =

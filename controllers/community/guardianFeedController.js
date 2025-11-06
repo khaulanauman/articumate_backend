@@ -1,4 +1,4 @@
-const GuardianPost = require("../models/community/guardianPost");
+const GuardianPost = require("../../models/community/guardianPost");
 
 // POST /api/guardian/feed
 exports.createPost = async (req, res, next) => {

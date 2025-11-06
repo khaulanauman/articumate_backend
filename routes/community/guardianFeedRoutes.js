@@ -1,7 +1,7 @@
 const router = require("express").Router();
-const requireAuth = require("../middleware/requireAuth");
-const requireRole = require("../middleware/requireRole");
-const c = require("../controllers/community/guardianFeedController");
+const requireAuth = require("../../middleware/requireAuth");
+const requireRole = require("../../middleware/requireRole");
+const c = require("../../controllers/community/guardianFeedController");
 
 router.use(requireAuth, requireRole("guardian"));
 
