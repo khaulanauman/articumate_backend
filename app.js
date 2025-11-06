@@ -3,11 +3,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+//route imports
 const authRoutes = require("./routes/authRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const guardianFeedRoutes = require("./routes/community/guardianFeedRoutes");
 const guardianGroupsRoutes = require("./routes/community/guardianGroupsRoutes");
-const guardianAccessRoutes = require("./routes/guardianAccessRoutes");
+const guardianAccessRoutes = require("./routes/community/guardianAccessRoutes");
 
 
 // Load environment variables from .env
