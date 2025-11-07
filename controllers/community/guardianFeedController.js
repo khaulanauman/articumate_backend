@@ -1,17 +1,62 @@
 const GuardianPost = require("../../models/community/guardianPost");
 
+// helper → normalize to the exact shape the app expects
+function shape(post, me, isAdmin = false) {
+  const p = post.toObject ? post.toObject() : post;
+
+  const likes = p.likes || [];
+  const saves = p.saves || [];
+  const flags = p.flags || [];
+
+  // authorId may be an ObjectId or a populated doc
+  const authorIdStr = (p.authorId && p.authorId._id ? p.authorId._id : p.authorId)?.toString?.() || "";
+  const meStr = me?.toString?.() || "";
+
+  const isOwner = authorIdStr === meStr;
+
+  return {
+    _id: p._id,
+    text: p.text,
+    createdAt: p.createdAt,
+    author: p.authorId
+      ? {
+          _id: p.authorId._id || p.authorId,
+          fullName: p.authorId.fullName || "",
+          email: p.authorId.email || "",
+        }
+      : null,
+    likesCount: likes.length,
+    savesCount: saves.length,
+    flagsCount: flags.length,
+    liked: likes.some(id => id.toString() === meStr),
+    saved: saves.some(id => id.toString() === meStr),
+    flagged: flags.some(id => id.toString() === meStr),
+    canDelete: isOwner || isAdmin,
+  };
+}
+
 // POST /api/guardian/feed
 exports.createPost = async (req, res, next) => {
   try {
     const { text } = req.body || {};
-    if (!text || !text.trim()) return res.status(400).json({ message: "Text required" });
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Text required" });
+    }
 
     const post = await GuardianPost.create({
       authorId: req.user._id,
       text: text.trim(),
     });
-    res.status(201).json(post);
-  } catch (e) { next(e); }
+
+    const populated = await GuardianPost.findById(post._id)
+      .populate("authorId", "fullName email");
+
+    return res
+      .status(201)
+      .json(shape(populated, req.user._id, req.user.role === "admin"));
+  } catch (e) {
+    next(e);
+  }
 };
 
 // GET /api/guardian/feed?cursor=&limit=
@@ -29,10 +74,17 @@ exports.listPosts = async (req, res, next) => {
 
     const hasMore = items.length > limit;
     const sliced = hasMore ? items.slice(0, limit) : items;
-    const nextCursor = hasMore ? sliced[sliced.length - 1].createdAt.toISOString() : null;
+    const nextCursor = hasMore
+      ? sliced[sliced.length - 1].createdAt.toISOString()
+      : null;
 
-    res.json({ items: sliced, nextCursor });
-  } catch (e) { next(e); }
+    return res.status(200).json({
+      items: sliced.map(p => shape(p, req.user._id, req.user.role === "admin")),
+      nextCursor,
+    });
+  } catch (e) {
+    next(e);
+  }
 };
 
 // POST /api/guardian/feed/:id/like
@@ -44,7 +96,7 @@ exports.likePost = async (req, res, next) => {
       { new: true }
     );
     if (!doc) return res.status(404).json({ message: "Not found" });
-    res.json({ likesCount: doc.likes.length });
+    return res.status(200).json({ likesCount: doc.likes.length, liked: true });
   } catch (e) { next(e); }
 };
 
@@ -57,7 +109,7 @@ exports.unlikePost = async (req, res, next) => {
       { new: true }
     );
     if (!doc) return res.status(404).json({ message: "Not found" });
-    res.json({ likesCount: doc.likes.length });
+    return res.status(200).json({ likesCount: doc.likes.length, liked: false });
   } catch (e) { next(e); }
 };
 
@@ -70,7 +122,7 @@ exports.savePost = async (req, res, next) => {
       { new: true }
     );
     if (!doc) return res.status(404).json({ message: "Not found" });
-    res.json({ savesCount: doc.saves.length });
+    return res.status(200).json({ savesCount: doc.saves.length, saved: true });
   } catch (e) { next(e); }
 };
 
@@ -83,7 +135,7 @@ exports.unsavePost = async (req, res, next) => {
       { new: true }
     );
     if (!doc) return res.status(404).json({ message: "Not found" });
-    res.json({ savesCount: doc.saves.length });
+    return res.status(200).json({ savesCount: doc.saves.length, saved: false });
   } catch (e) { next(e); }
 };
 
@@ -96,7 +148,7 @@ exports.flagPost = async (req, res, next) => {
       { new: true }
     );
     if (!doc) return res.status(404).json({ message: "Not found" });
-    res.json({ flagsCount: doc.flags.length });
+    return res.status(200).json({ flagsCount: doc.flags.length, flagged: true });
   } catch (e) { next(e); }
 };
 
@@ -111,6 +163,6 @@ exports.deletePost = async (req, res, next) => {
     if (!isOwner && !isAdmin) return res.status(403).json({ message: "Forbidden" });
 
     await post.deleteOne();
-    res.status(204).end();
+    return res.sendStatus(204);
   } catch (e) { next(e); }
 };
