@@ -9,6 +9,7 @@ router.use(requireAuth, requireRole("guardian"));
 // groups
 router.post("/groups", groups.createGroup);
 router.get("/groups", groups.listGroups);
+router.get("/groups/:id", groups.getGroupDetails);
 router.post("/groups/:id/join", groups.joinGroup);
 router.post("/groups/:id/leave", groups.leaveGroup);
 
