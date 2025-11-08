@@ -29,7 +29,7 @@ function initGuardianChat(httpServer, corsOrigins = ["*"]) {
     socket.on("joinGroup", async (groupId) => {
       const g = await GuardianGroup.findById(groupId);
       if (!g) return socket.emit("error", "Group not found");
-      const isMember = g.members.some(m => m.toString() === socket.user._id);
+      const isMember = g.members.some(m => m.toString() === String(socket.user._id));
       if (!isMember) return socket.emit("error", "Not a member");
       socket.join(groupId);
       socket.emit("joined", { groupId });
@@ -40,7 +40,7 @@ function initGuardianChat(httpServer, corsOrigins = ["*"]) {
       if (!text || !text.trim()) return;
       const g = await GuardianGroup.findById(groupId);
       if (!g) return socket.emit("error", "Group not found");
-      const isMember = g.members.some(m => m.toString() === socket.user._id);
+      const isMember = g.members.some(m => m.toString() === String(socket.user._id));
       if (!isMember) return socket.emit("error", "Not a member");
 
       const msg = await GuardianMessage.create({
@@ -50,12 +50,14 @@ function initGuardianChat(httpServer, corsOrigins = ["*"]) {
       });
 
       io.to(groupId).emit("newMessage", {
-        _id: msg._id,
-        groupId,
-        senderId: { _id: socket.user._id, fullName: socket.user.fullName }, // if in token
-        text: msg.text,
-        createdAt: msg.createdAt,
-      });
+  _id: msg._id,
+  groupId,
+  senderId: socket.user._id,                  // add this
+  sender: { _id: socket.user._id, fullName: socket.user.fullName || "" },
+  text: msg.text,
+  createdAt: msg.createdAt,
+});
+
     });
   });
 

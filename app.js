@@ -9,6 +9,8 @@ const loginRoutes = require("./routes/loginRoutes");
 const guardianFeedRoutes = require("./routes/community/guardianFeedRoutes");
 const guardianGroupsRoutes = require("./routes/community/guardianGroupsRoutes");
 const guardianAccessRoutes = require("./routes/community/guardianAccessRoutes");
+const childSpaceRoutes = require("./routes/community/childSpaceRoutes");
+const challengesRoutes = require("./routes/community/challengesRoutes");
 
 
 // Load environment variables from .env
@@ -44,6 +46,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/guardian", guardianFeedRoutes);
 app.use("/api/guardian", guardianGroupsRoutes);
 app.use("/api/guardian/access", guardianAccessRoutes);
+app.use("/api/child", childSpaceRoutes);
+app.use("/api/challenges", challengesRoutes);
 
 // --- DATABASE CONNECTION ---
 const MONGO_URI =

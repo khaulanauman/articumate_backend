@@ -3,12 +3,28 @@ const GuardianGroup = require("../../models/community/guradianGroup");
 
 // GET /api/guardian/groups/:id/messages?limit=50&before=ISO
 exports.getMessages = async (req, res, next) => {
+  function shapeMessage(doc) {
+    const o = doc.toObject ? doc.toObject() : doc;
+    const sender = o.senderId || {};
+    return {
+      _id: o._id,
+      groupId: o.groupId,                 // add this for client convenience
+      text: o.text,
+      createdAt: o.createdAt,
+      senderId: sender._id || sender,     // keep a flat senderId too
+      sender: {                           // and the rich sender object
+        _id: sender._id || sender,
+        fullName: sender.fullName || "",
+        email: sender.email || "",
+      },
+    };
+  }
+
   try {
     const { id: groupId } = req.params;
     const limit = Math.min(parseInt(req.query.limit || "50", 10), 100);
     const before = req.query.before ? new Date(req.query.before) : null;
 
-    // ensure caller is a member
     const g = await GuardianGroup.findById(groupId);
     if (!g) return res.status(404).json({ message: "Group not found" });
     if (!g.members.some(m => m.toString() === req.user._id.toString())) {
@@ -23,6 +39,7 @@ exports.getMessages = async (req, res, next) => {
       .limit(limit)
       .populate("senderId", "fullName email");
 
-    res.json(items.reverse());
+    res.json(items.reverse().map(shapeMessage));
   } catch (e) { next(e); }
 };
+
