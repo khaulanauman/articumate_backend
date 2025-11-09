@@ -23,6 +23,9 @@ const userSchema = new mongoose.Schema(
       enum: ["guardian", "therapist", "admin", "child"],
       default: "guardian",
     },
+    avatar: { type: String, default: "" },
+    stars: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
     guardianName: {
       type: String,
       required: true,
