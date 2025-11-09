@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const whoami = require("./middleware/whoami");
 //route imports
 const authRoutes = require("./routes/authRoutes");
 const loginRoutes = require("./routes/loginRoutes");
@@ -39,7 +40,7 @@ app.use(cors(corsOptions));
 
 // Parse JSON bodies
 app.use(express.json());
-
+app.use(whoami);
 // --- ROUTES ---
 app.use("/api/auth", loginRoutes);
 app.use("/api/auth", authRoutes); 
