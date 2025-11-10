@@ -12,7 +12,7 @@ const GuardianMessageSchema = new Schema(
 
     senderId: {
       type: Schema.Types.ObjectId,
-      ref: "Guardian",
+      ref: "User",
       required: true,
       index: true,
     },
