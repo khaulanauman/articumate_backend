@@ -17,17 +17,24 @@ async function myRank(challengeId, userId) {
     const rows = await ChallengeProgress.aggregate([
       { $match: { challengeId: new Types.ObjectId(challengeId) } },
       { $set: { points: "$pointsEarned", tieBreak: "$updatedAt" } },
+
+      // stable display order (points DESC, tiebreak ASC)
+      { $sort: { points: -1, tieBreak: 1 } },
+
+      // BUT: rank only by a single field (points)
       {
         $setWindowFields: {
-          sortBy: { points: -1, tieBreak: 1 },
+          sortBy: { points: -1 },           // <-- single key only
           output: { rank: { $rank: {} } },
         },
       },
+
       { $match: { userId: new Types.ObjectId(userId) } },
       { $project: { _id: 0, rank: 1 } },
     ]);
     return rows.length ? rows[0].rank : null;
   } catch {
+    // your fallback is fine
     const mine = await ChallengeProgress.findOne({ challengeId, userId }).lean();
     if (!mine) return null;
     const ahead = await ChallengeProgress.countDocuments({
@@ -40,6 +47,7 @@ async function myRank(challengeId, userId) {
     return ahead + 1;
   }
 }
+
 
 // ========== handlers ==========
 
@@ -154,13 +162,13 @@ const summary = async (req, res) => {
 const leaderboardForChallenge = async (req, res) => {
   const { id } = req.params;
   const limit = Math.min(parseInt(req.query.limit || "20", 10), 100);
-  const skip = Math.max(parseInt(req.query.skip || "0", 10), 0);
+  const skip  = Math.max(parseInt(req.query.skip  || "0", 10), 0);
 
   const rows = await ChallengeProgress.aggregate([
     { $match: { challengeId: new Types.ObjectId(id) } },
     {
       $lookup: {
-        from: "users", // collection name for your User model (usually 'users')
+        from: "users",
         localField: "userId",
         foreignField: "_id",
         as: "user",
@@ -168,20 +176,27 @@ const leaderboardForChallenge = async (req, res) => {
     },
     { $unwind: "$user" },
     { $set: { points: "$pointsEarned", tieBreak: "$updatedAt" } },
+
+    // visual order
+    { $sort: { points: -1, tieBreak: 1 } },
+
+    // rank by single key (points)
     {
       $setWindowFields: {
-        sortBy: { points: -1, tieBreak: 1 },
+        sortBy: { points: -1 },       // <-- single key only
         output: { rank: { $rank: {} } },
       },
     },
-    { $sort: { points: -1, tieBreak: 1 } },
+
+    // now paginate
     { $skip: skip },
     { $limit: limit },
+
     {
       $project: {
         _id: 0,
         rank: 1,
-        pointsEarned: "$pointsEarned",
+        pointsEarned: 1,
         user: { _id: "$user._id", fullName: "$user.fullName", avatar: "$user.avatar" },
       },
     },

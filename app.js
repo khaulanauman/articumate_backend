@@ -3,6 +3,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const whoami = require("./middleware/whoami");
+const http = require("http");
+const { initGuardianChat } = require("./sockets/guardianChat");
+
+
 //route imports
 const authRoutes = require("./routes/authRoutes");
 const loginRoutes = require("./routes/loginRoutes");
@@ -17,6 +22,7 @@ const challengesRoutes = require("./routes/community/challengesRoutes");
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 
 // --- CORS CONFIG ---
 const corsOptions = {
@@ -39,7 +45,7 @@ app.use(cors(corsOptions));
 
 // Parse JSON bodies
 app.use(express.json());
-
+app.use(whoami);
 // --- ROUTES ---
 app.use("/api/auth", loginRoutes);
 app.use("/api/auth", authRoutes); 
@@ -57,9 +63,9 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB!!");
-
+    initGuardianChat(server, ["http://localhost:8080", "http://127.0.0.1:8080"]);
     const PORT = process.env.PORT || 8080;
-    app.listen(PORT, () =>
+    server.listen(PORT, () =>
       console.log(`Server running on http://localhost:${PORT}`)
     );
   })

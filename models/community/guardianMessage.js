@@ -10,11 +10,9 @@ const GuardianMessageSchema = new Schema(
       index: true,
     },
 
-    // 👇 This should point to "Guardian", not "User",
-    // because your token validation allows only guardians/admins.
     senderId: {
       type: Schema.Types.ObjectId,
-      ref: "Guardian",
+      ref: "User",
       required: true,
       index: true,
     },

@@ -1,4 +1,4 @@
-const GuardianGroup = require("../../models/community/guradianGroup");
+const GuardianGroup = require("../../models/community/guardianGroup");
 
 // helper – normalize a group doc to the shape the app expects
 function shapeGroup(doc, meId, withMembers = false) {
@@ -33,27 +33,23 @@ function shapeGroup(doc, meId, withMembers = false) {
 // POST /api/guardian/groups
 exports.createGroup = async (req, res, next) => {
   try {
-    const { name, description } = req.body || {};
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "Group name required" });
-    }
-
+    const { name, description } = req.body;
     const g = await GuardianGroup.create({
-      name: name.trim(),
-      description: (description || "").trim(),
+      name,
+      description,
       createdBy: req.user._id,
-      members: [req.user._id],
+      members: [req.user._id],               // <-- important
     });
 
-    // populate for uniform response
-    const populated = await GuardianGroup.findById(g._id)
-      .populate("createdBy", "fullName email")
-      .populate("members", "fullName email");
-
-    return res.status(201).json(shapeGroup(populated, req.user._id, true)); // object
-  } catch (e) {
-    next(e);
-  }
+    // optional: return a shape the app expects
+    res.status(201).json({
+      _id: g._id,
+      name: g.name,
+      description: g.description,
+      membersCount: g.members.length,
+      joined: true,                          // creator is a member
+    });
+  } catch (e) { next(e); }
 };
 
 // GET /api/guardian/groups?search=
@@ -90,16 +86,18 @@ exports.getGroupDetails = async (req, res, next) => {
 // POST /api/guardian/groups/:id/join
 exports.joinGroup = async (req, res, next) => {
   try {
-    const g = await GuardianGroup.findByIdAndUpdate(
-      req.params.id,
-      { $addToSet: { members: req.user._id } },
-      { new: true }
-    ).lean();
-    if (!g) return res.status(404).json({ message: "Not found" });
-    return res.status(200).json({ members: g.members.length, joined: true }); // small JSON ok
-  } catch (e) {
-    next(e);
-  }
+    const { id } = req.params;
+    const uid = req.user._id;
+    const g = await GuardianGroup.findById(id);
+    if (!g) return res.status(404).json({ message: "Group not found" });
+
+    if (!g.members.some(m => m.equals(uid))) {
+      g.members.push(uid);
+      await g.save();
+    }
+
+    return res.sendStatus(204);
+  } catch (e) { next(e); }
 };
 
 // POST /api/guardian/groups/:id/leave
